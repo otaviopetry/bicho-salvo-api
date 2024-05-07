@@ -4,6 +4,7 @@ const express = require("express");
 const AWS = require("aws-sdk");
 const multer = require("multer");
 const cors = require("cors");
+const { v4 } = require("uuid");
 
 // Firebase
 const firebaseAdmin = require("firebase-admin");
@@ -42,7 +43,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
   const params = {
     Bucket: process.env.S3_BUCKET_NAME,
-    Key: `${Date.now()}-${originalname}`,
+    Key: `${v4()}-${Date.now()}-${originalname}`,
     Body: buffer,
     ContentType: mimetype,
   };
