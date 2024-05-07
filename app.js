@@ -1,8 +1,20 @@
 require("dotenv").config();
+
 const express = require("express");
 const AWS = require("aws-sdk");
 const multer = require("multer");
 const cors = require("cors");
+
+// Firebase
+const firebaseAdmin = require("firebase-admin");
+
+firebaseAdmin.initializeApp({
+  credential: firebaseAdmin.credential.cert(
+    JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+  ),
+});
+
+const db = firebaseAdmin.firestore();
 
 // Configure AWS SDK
 AWS.config.update({
@@ -12,14 +24,15 @@ AWS.config.update({
 });
 
 const s3 = new AWS.S3();
-const upload = multer(); // for parsing multipart/form-data
+
+// App
+const upload = multer();
 const app = express();
 
 app.use(cors());
-app.use(express.json()); // To parse JSON bodies, if needed for other routes
+app.use(express.json());
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  // Check if the file is actually received
   if (!req.file) {
     console.log("No file uploaded");
     return res.status(400).send("No file uploaded.");
@@ -47,6 +60,18 @@ app.post("/upload", upload.single("file"), (req, res) => {
       location: data.Location,
     });
   });
+});
+
+app.post("/add-animal", async (req, res) => {
+  try {
+    const animal = req.body;
+    const docRef = await db.collection("animals").add(animal);
+    console.log("Document written with ID:", docRef.id);
+    res.status(200).json({ message: "Document written with ID: " + docRef.id });
+  } catch (e) {
+    console.error("Error adding document:", e);
+    res.status(500).json({ error: "Error adding document: " + e.message });
+  }
 });
 
 const port = process.env.PORT || 3000;
