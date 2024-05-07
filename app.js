@@ -75,6 +75,19 @@ app.post("/add-animal", async (req, res) => {
   }
 });
 
+app.get("/animals", async (req, res) => {
+  try {
+    const animalCol = firebaseAdmin.firestore().collection("animals");
+    const snapshot = await animalCol.get();
+    const animals = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    res.status(200).json(animals);
+  } catch (error) {
+    console.error("Error fetching animals from Firestore:", error);
+    res.status(500).json({ message: "Failed to fetch animals" });
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
