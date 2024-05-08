@@ -33,6 +33,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Endpoints
 app.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) {
     console.log("No file uploaded");
@@ -85,6 +86,26 @@ app.get("/animals", async (req, res) => {
   } catch (error) {
     console.error("Error fetching animals from Firestore:", error);
     res.status(500).json({ message: "Failed to fetch animals" });
+  }
+});
+
+app.get("/unique-colors", async (req, res) => {
+  try {
+    const animalsRef = db.collection("animals");
+    const snapshot = await animalsRef.get();
+    const colors = new Set();
+
+    snapshot.forEach((doc) => {
+      let data = doc.data();
+      if (data.color) {
+        colors.add(String(data.color).trim());
+      }
+    });
+
+    res.status(200).send({ uniqueColors: Array.from(colors) });
+  } catch (error) {
+    console.error("Error fetching colors: ", error);
+    res.status(500).send("Failed to retrieve colors");
   }
 });
 
