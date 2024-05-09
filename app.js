@@ -89,23 +89,41 @@ app.get("/animals", async (req, res) => {
   }
 });
 
-app.get("/unique-colors", async (req, res) => {
+app.get("/locations", async (req, res) => {
   try {
     const animalsRef = db.collection("animals");
     const snapshot = await animalsRef.get();
-    const colors = new Set();
+    const locations = new Set();
 
     snapshot.forEach((doc) => {
       let data = doc.data();
-      if (data.color) {
-        colors.add(String(data.color).trim());
+      if (data.whereItIs) {
+        locations.add(String(data.whereItIs).trim());
       }
     });
 
-    res.status(200).send({ uniqueColors: Array.from(colors) });
+    res.status(200).send({ locations: Array.from(locations) });
   } catch (error) {
     console.error("Error fetching colors: ", error);
     res.status(500).send("Failed to retrieve colors");
+  }
+});
+
+app.get("/animal/:id", async (req, res) => {
+  const animalId = req.params.id;
+
+  try {
+    const animalRef = db.collection("animals").doc(animalId);
+    const doc = await animalRef.get();
+
+    if (!doc.exists) {
+      res.status(404).send("No animal found with the given ID.");
+    } else {
+      res.status(200).send(doc.data());
+    }
+  } catch (error) {
+    console.error("Error retrieving animal: ", error);
+    res.status(500).send("Error retrieving animal data");
   }
 });
 
