@@ -78,11 +78,46 @@ app.post("/add-animal", async (req, res) => {
 
 app.get("/animals", async (req, res) => {
   try {
+    const { sex, size, whereItIs, color, startAfter, limit = 50 } = req.query;
     const animalCol = firebaseAdmin.firestore().collection("animals");
-    const snapshot = await animalCol.get();
+
+    let query = animalCol.orderBy("createdAt", "desc").limit(+limit); // Changed to 'desc' for descending order as discussed earlier
+
+    // Apply filters if they are provided
+    if (sex) {
+      query = query.where("sex", "==", sex);
+    }
+    if (size) {
+      query = query.where("size", "==", size);
+    }
+    if (whereItIs) {
+      query = query.where("whereItIs", "==", whereItIs);
+    }
+    if (color) {
+      query = query.where("color", "==", color);
+    }
+
+    if (startAfter) {
+      const lastDoc = await animalCol.doc(startAfter).get();
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      } else {
+        return res.status(404).json({ message: "Invalid startAfter ID" });
+      }
+    }
+
+    const snapshot = await query.get();
     const animals = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-    res.status(200).json(animals);
+    let nextStartAfter = null;
+    if (animals.length > 0) {
+      nextStartAfter = animals[animals.length - 1].id; // ID of the last document fetched
+    }
+
+    res.status(200).json({
+      animals,
+      nextPageToken: nextStartAfter, // Token to use to fetch the next page
+    });
   } catch (error) {
     console.error("Error fetching animals from Firestore:", error);
     res.status(500).json({ message: "Failed to fetch animals" });
