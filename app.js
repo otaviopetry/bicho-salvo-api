@@ -173,6 +173,26 @@ app.get("/animal/:id", async (req, res) => {
   }
 });
 
+app.put("/animal/:id", async (req, res) => {
+  const animalId = req.params.id;
+  const newData = req.body;
+
+  try {
+    const animalRef = db.collection("animals").doc(animalId);
+    const doc = await animalRef.get();
+
+    if (!doc.exists) {
+      res.status(404).send("No animal found with the given ID.");
+    } else {
+      await animalRef.set(newData, { merge: true });
+      res.status(200).json({ message: "Animal successfully edited." });
+    }
+  } catch (error) {
+    console.error("Error updating animal: ", error);
+    res.status(500).send("Error updating animal data");
+  }
+});
+
 app.get("/animal-count", async (req, res) => {
   const animalsRef = db.collection("animals");
   const snapshot = await animalsRef.count().get();
