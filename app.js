@@ -78,12 +78,23 @@ app.post("/add-animal", async (req, res) => {
 
 app.get("/animals", async (req, res) => {
   try {
-    const { sex, size, whereItIs, color, startAfter, limit = 50 } = req.query;
+    const {
+      species,
+      sex,
+      size,
+      whereItIs,
+      color,
+      startAfter,
+      limit = 50,
+    } = req.query;
     const animalCol = firebaseAdmin.firestore().collection("animals");
 
     let query = animalCol.orderBy("createdAt", "desc").limit(+limit); // Changed to 'desc' for descending order as discussed earlier
 
     // Apply filters if they are provided
+    if (species) {
+      query = query.where("species", "==", species);
+    }
     if (sex) {
       query = query.where("sex", "==", sex);
     }
