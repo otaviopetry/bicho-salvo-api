@@ -173,6 +173,13 @@ app.get("/animal/:id", async (req, res) => {
   }
 });
 
+app.get("/animal-count", async (req, res) => {
+  const animalsRef = db.collection("animals");
+  const snapshot = await animalsRef.count().get();
+
+  res.status(200).send({ count: snapshot.data().count });
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
