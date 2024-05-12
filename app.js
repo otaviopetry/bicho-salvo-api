@@ -63,7 +63,12 @@ app.post("/add-animal", async (req, res) => {
   try {
     const animal = req.body;
     const docRef = await db.collection("animals").add(animal);
-    res.status(200).json({ message: "Document written with ID: " + docRef.id });
+    res
+      .status(200)
+      .json({
+        message: "Document written with ID: " + docRef.id,
+        id: docRef.id,
+      });
   } catch (e) {
     console.error("Error adding document:", e);
     res.status(500).json({ error: "Error adding document: " + e.message });
