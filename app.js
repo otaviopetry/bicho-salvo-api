@@ -63,12 +63,10 @@ app.post("/add-animal", async (req, res) => {
   try {
     const animal = req.body;
     const docRef = await db.collection("animals").add(animal);
-    res
-      .status(200)
-      .json({
-        message: "Document written with ID: " + docRef.id,
-        id: docRef.id,
-      });
+    res.status(200).json({
+      message: "Document written with ID: " + docRef.id,
+      id: docRef.id,
+    });
   } catch (e) {
     console.error("Error adding document:", e);
     res.status(500).json({ error: "Error adding document: " + e.message });
@@ -114,6 +112,8 @@ app.get("/animals", async (req, res) => {
       }
     }
 
+    query = query.where("foundOwner", "==", false);
+
     if (startAfter) {
       const lastDoc = await animalCol.doc(startAfter).get();
       if (lastDoc.exists) {
@@ -127,6 +127,7 @@ app.get("/animals", async (req, res) => {
     const animals = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
     let nextStartAfter = null;
+
     if (animals.length > 0) {
       nextStartAfter = animals[animals.length - 1].id; // ID of the last document fetched
     }
@@ -204,6 +205,68 @@ app.get("/animal-count", async (req, res) => {
   const snapshot = await animalsRef.count().get();
 
   res.status(200).send({ count: snapshot.data().count });
+});
+
+app.get("/search-jpg-entries", async (req, res) => {
+  try {
+    const animalCol = db.collection("animals");
+    let query = animalCol.orderBy("createdAt", "desc");
+
+    const snapshot = await query.get();
+    if (snapshot.empty) {
+      res.status(404).send("No matching documents.");
+      return;
+    }
+
+    const results = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (
+        data.imageURLs &&
+        data.imageURLs.some(
+          (url) => url.endsWith(".jpg") || url.endsWith(".png")
+        )
+      ) {
+        results.push(doc.id);
+      }
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching entries: ", error);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
+app.get("/search-specific-image", async (req, res) => {
+  try {
+    const { image } = req.query;
+
+    const animalCol = db.collection("animals");
+    let query = animalCol.orderBy("createdAt", "desc");
+
+    const snapshot = await query.get();
+    if (snapshot.empty) {
+      res.status(404).send("No matching documents.");
+      return;
+    }
+
+    const results = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (
+        data.imageURLs &&
+        data.imageURLs.some((url) => url.indexOf(image) !== -1)
+      ) {
+        results.push(doc.id);
+      }
+    });
+
+    res.status(200).json(results);
+  } catch (error) {
+    console.error("Error fetching entries: ", error);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
 });
 
 const port = process.env.PORT || 3000;
