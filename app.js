@@ -142,6 +142,31 @@ app.get("/animals", async (req, res) => {
   }
 });
 
+app.get("/temporary-homes", async (req, res) => {
+  try {
+    const animalsRef = db.collection("animals");
+    const snapshot = await animalsRef.get();
+    const locations = new Set();
+
+    snapshot.forEach((doc) => {
+      let data = doc.data();
+      let location = data.whereItIs ?? "";
+      if (
+        typeof location === "string" &&
+        location.length > 0 &&
+        location.indexOf("LT") !== -1
+      ) {
+        locations.add(String(data.whereItIs).trim());
+      }
+    });
+
+    res.status(200).send({ locations: Array.from(locations) });
+  } catch (error) {
+    console.error("Error fetching colors: ", error);
+    res.status(500).send("Failed to retrieve colors");
+  }
+});
+
 app.get("/locations", async (req, res) => {
   try {
     const animalsRef = db.collection("animals");
@@ -150,7 +175,12 @@ app.get("/locations", async (req, res) => {
 
     snapshot.forEach((doc) => {
       let data = doc.data();
-      if (data.whereItIs) {
+      let location = data.whereItIs ?? "";
+      if (
+        typeof location === "string" &&
+        location.length > 0 &&
+        location.indexOf("LT") === -1
+      ) {
         locations.add(String(data.whereItIs).trim());
       }
     });
