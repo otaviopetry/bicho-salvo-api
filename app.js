@@ -36,7 +36,6 @@ app.use(express.json());
 // Endpoints
 app.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) {
-    console.log("No file uploaded");
     return res.status(400).send("No file uploaded.");
   }
 
@@ -49,14 +48,10 @@ app.post("/upload", upload.single("file"), (req, res) => {
     ContentType: mimetype,
   };
 
-  console.log("Params:", params);
-
   s3.upload(params, function (err, data) {
     if (err) {
-      console.log("Error uploading to S3:", err);
       return res.status(500).send("An error occurred: " + err.message);
     }
-    console.log("Upload successful:", data);
     return res.status(200).json({
       message: "File uploaded successfully.",
       location: data.Location,
@@ -68,7 +63,6 @@ app.post("/add-animal", async (req, res) => {
   try {
     const animal = req.body;
     const docRef = await db.collection("animals").add(animal);
-    console.log("Document written with ID:", docRef.id);
     res.status(200).json({ message: "Document written with ID: " + docRef.id });
   } catch (e) {
     console.error("Error adding document:", e);
@@ -89,9 +83,8 @@ app.get("/animals", async (req, res) => {
     } = req.query;
     const animalCol = firebaseAdmin.firestore().collection("animals");
 
-    let query = animalCol.orderBy("createdAt", "desc").limit(+limit); // Changed to 'desc' for descending order as discussed earlier
+    let query = animalCol.orderBy("createdAt", "desc").limit(+limit);
 
-    // Apply filters if they are provided
     if (species) {
       query = query.where("species", "==", species);
     }
@@ -105,7 +98,15 @@ app.get("/animals", async (req, res) => {
       query = query.where("whereItIs", "==", whereItIs);
     }
     if (color) {
-      query = query.where("color", "==", color);
+      if (Array.isArray(color) && color.length <= 30) {
+        query = query.where("color", "in", color);
+      } else if (Array.isArray(color) && color.length > 30) {
+        return res
+          .status(400)
+          .json({ message: "You can specify up to 30 colors only." });
+      } else {
+        query = query.where("color", "==", color);
+      }
     }
 
     if (startAfter) {
