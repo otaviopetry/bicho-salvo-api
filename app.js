@@ -196,6 +196,29 @@ app.get("/locations", async (req, res) => {
   }
 });
 
+app.get("/all-locations", async (req, res) => {
+  try {
+    const animalsRef = db.collection("animals");
+    const snapshot = await animalsRef.get();
+    const locations = new Set();
+
+    snapshot.forEach((doc) => {
+      let data = doc.data();
+      let location = data.whereItIs ?? "";
+      let foundOwner = data.foundOwner ?? false;
+
+      if (typeof location === "string" && location.length > 0 && !foundOwner) {
+        locations.add(String(data.whereItIs).trim());
+      }
+    });
+
+    res.status(200).send({ locations: Array.from(locations) });
+  } catch (error) {
+    console.error("Error fetching colors: ", error);
+    res.status(500).send("Failed to retrieve colors");
+  }
+});
+
 app.get("/animal/:id", async (req, res) => {
   const animalId = req.params.id;
 
