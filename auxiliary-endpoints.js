@@ -164,6 +164,37 @@ app.get("/search-specific-image", async (req, res) => {
   }
 });
 
+app.delete("/animals-delete", async (req, res) => {
+  const { ids } = req.body; // Extract IDs from request body
+
+  // Check if IDs array is present and valid
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    return res
+      .status(400)
+      .send({ message: "No IDs provided or invalid format." });
+  }
+
+  try {
+    const animalsRef = db.collection("animals");
+    const batch = db.batch();
+
+    // Add delete operations for each ID to the batch
+    ids.forEach((id) => {
+      const animalRef = animalsRef.doc(id);
+      batch.delete(animalRef);
+    });
+
+    // Commit the batch to perform all deletions
+    await batch.commit();
+    res.status(200).send({ message: "Animals deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting animals: ", error);
+    res
+      .status(500)
+      .send({ message: "Failed to delete animals", error: error.message });
+  }
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`Server running on port ${port}`));

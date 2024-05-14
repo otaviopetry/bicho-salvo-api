@@ -151,10 +151,12 @@ app.get("/temporary-homes", async (req, res) => {
     snapshot.forEach((doc) => {
       let data = doc.data();
       let location = data.whereItIs ?? "";
+      let foundOwner = data.foundOwner ?? false;
       if (
         typeof location === "string" &&
         location.length > 0 &&
-        location.indexOf("LT") !== -1
+        location.indexOf("LT") !== -1 &&
+        !foundOwner
       ) {
         locations.add(String(data.whereItIs).trim());
       }
@@ -176,10 +178,12 @@ app.get("/locations", async (req, res) => {
     snapshot.forEach((doc) => {
       let data = doc.data();
       let location = data.whereItIs ?? "";
+      let foundOwner = data.foundOwner ?? false;
       if (
         typeof location === "string" &&
         location.length > 0 &&
-        location.indexOf("LT") === -1
+        location.indexOf("LT") === -1 &&
+        !foundOwner
       ) {
         locations.add(String(data.whereItIs).trim());
       }
