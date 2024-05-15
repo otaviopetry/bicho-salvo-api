@@ -89,13 +89,25 @@ app.get("/animals", async (req, res) => {
     let query = animalCol.orderBy("createdAt", "desc").limit(+limit);
 
     if (species) {
-      query = query.where("species", "==", species);
+      if (Array.isArray(species)) {
+        query = query.where("species", "in", species);
+      } else {
+        query = query.where("species", "==", species);
+      }
     }
     if (sex) {
-      query = query.where("sex", "==", sex);
+      if (Array.isArray(sex)) {
+        query = query.where("sex", "in", sex);
+      } else {
+        query = query.where("sex", "==", sex);
+      }
     }
     if (size) {
-      query = query.where("size", "==", size);
+      if (Array.isArray(size)) {
+        query = query.where("size", "in", size);
+      } else {
+        query = query.where("size", "==", size);
+      }
     }
     if (whereItIs) {
       query = query.where("whereItIs", "==", whereItIs);

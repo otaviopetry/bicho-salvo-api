@@ -102,6 +102,26 @@ app.get("/iguatemi", async (req, res) => {
   } catch (error) {}
 });
 
+app.get("/animals-on-iguatemi", async (req, res) => {
+  try {
+    const animalsRef = db.collection("animals");
+    const snapshot = await animalsRef.get();
+    const animals = [];
+
+    snapshot.forEach((doc) => {
+      let data = doc.data();
+      if (data.whereItIs === "Shopping Iguatemi") {
+        animals.push({ id: doc.id, description: data.characteristics });
+      }
+    });
+
+    res.status(200).send({ animals });
+  } catch (error) {
+    console.error("Error fetching animals: ", error);
+    res.status(500).send("Failed to retrieve animals");
+  }
+});
+
 app.get("/search-jpg-entries", async (req, res) => {
   try {
     const animalCol = db.collection("animals");
