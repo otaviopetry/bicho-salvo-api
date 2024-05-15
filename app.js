@@ -96,11 +96,9 @@ app.get("/animals", async (req, res) => {
       }
     }
     if (sex) {
-      if (Array.isArray(sex)) {
-        query = query.where("sex", "in", sex);
-      } else {
-        query = query.where("sex", "==", sex);
-      }
+      let adaptedSex = [sex, "não se sabe"];
+
+      query = query.where("sex", "in", adaptedSex);
     }
     if (size) {
       if (Array.isArray(size)) {
