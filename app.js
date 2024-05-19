@@ -152,6 +152,45 @@ app.get("/animals", async (req, res) => {
   }
 });
 
+app.get("/happy-reunions", async (req, res) => {
+  try {
+    const { limit = 50, startAfter } = req.query;
+
+    const animalCol = firebaseAdmin.firestore().collection("animals");
+
+    let query = animalCol.orderBy("createdAt", "desc").limit(+limit);
+
+    query = query.where("foundOwner", "==", true);
+
+    if (startAfter) {
+      const lastDoc = await animalCol.doc(startAfter).get();
+
+      if (lastDoc.exists) {
+        query = query.startAfter(lastDoc);
+      } else {
+        return res.status(404).json({ message: "Invalid startAfter ID" });
+      }
+    }
+
+    const snapshot = await query.get();
+    const animals = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    let nextStartAfter = null;
+
+    if (animals.length > 0) {
+      nextStartAfter = animals[animals.length - 1].id;
+    }
+
+    res.status(200).json({
+      animals,
+      nextPageToken: nextStartAfter,
+    });
+  } catch (error) {
+    console.error("Error fetching animals from Firestore:", error);
+    res.status(500).json({ message: "Failed to fetch animals" });
+  }
+});
+
 app.get("/temporary-homes", async (req, res) => {
   try {
     const animalsRef = db.collection("animals");
