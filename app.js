@@ -274,6 +274,33 @@ app.get("/animal-count", async (req, res) => {
   res.status(200).send({ count: snapshot.data().count });
 });
 
+app.get("/iguatemi", async (req, res) => {
+  const iguatemiCode = req.query.code;
+
+  try {
+    const animalRef = db.collection("animals");
+    let query = animalRef.orderBy("createdAt", "desc");
+
+    const snapshot = await query.get();
+
+    if (snapshot.empty) {
+      res.status(404).send("No matching documents.");
+      return;
+    }
+
+    const results = [];
+
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.characteristics.indexOf(iguatemiCode) !== -1) {
+        results.push(doc.id);
+      }
+    });
+
+    res.status(200).json(results);
+  } catch (error) {}
+});
+
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => console.log(`Server running on port ${port}`));
