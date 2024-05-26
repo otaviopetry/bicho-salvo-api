@@ -55,7 +55,7 @@ app.get("/animals-on-location", async (req, res) => {
   }
 });
 
-app.patch("/animals-location", async (req, res) => {
+app.patch("/update-animals-location", async (req, res) => {
   const { ids, location } = req.body;
 
   try {
@@ -185,6 +185,27 @@ app.delete("/animals-delete", async (req, res) => {
     res
       .status(500)
       .send({ message: "Failed to delete animals", error: error.message });
+  }
+});
+
+app.get("/animals-on-alzira", async (req, res) => {
+  try {
+    const animalsRef = db.collection("animals");
+    const snapshot = await animalsRef.get();
+    const animals = [];
+
+    snapshot.forEach((doc) => {
+      let data = doc.data();
+
+      if (data.whereItIs.includes("petsdonaalzira")) {
+        animals.push({ id: doc.id, ...data });
+      }
+    });
+
+    res.status(200).send({ animals });
+  } catch (error) {
+    console.error("Error fetching animals: ", error);
+    res.status(500).send("Failed to retrieve animals");
   }
 });
 

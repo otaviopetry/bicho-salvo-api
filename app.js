@@ -154,7 +154,7 @@ app.get("/animals", async (req, res) => {
 
 app.get("/happy-reunions", async (req, res) => {
   try {
-    const { limit = 50, startAfter } = req.query;
+    const { limit = 50, nextPageToken } = req.query;
 
     const animalCol = firebaseAdmin.firestore().collection("animals");
 
@@ -162,8 +162,8 @@ app.get("/happy-reunions", async (req, res) => {
 
     query = query.where("foundOwner", "==", true);
 
-    if (startAfter) {
-      const lastDoc = await animalCol.doc(startAfter).get();
+    if (nextPageToken) {
+      const lastDoc = await animalCol.doc(nextPageToken).get();
 
       if (lastDoc.exists) {
         query = query.startAfter(lastDoc);
